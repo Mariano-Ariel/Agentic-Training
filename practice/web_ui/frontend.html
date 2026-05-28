@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agent UI</title>
+    <link rel="stylesheet" href="./static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Agent Runtime Interface</h2>
+
+    <input id="input" placeholder="Escribe algo..." />
+    <button onclick="send()">Enviar</button>
+
+    <pre id="output"></pre>
+
+</div>
+
+<script>
+async function send() {
+    const message = document.getElementById("input").value;
+
+    console.log("SENDING:", message);
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
+
+        console.log("STATUS:", res.status);
+
+        const data = await res.json();
+
+        console.log("DATA:", data);
+
+        document.getElementById("output").innerText =
+            JSON.stringify(data, null, 2);
+
+    } catch (err) {
+        console.error("FETCH ERROR:", err);
+        document.getElementById("output").innerText =
+            "Error en conexión backend";
+    }
+}
+</script>
+
+</body>
+</html>
