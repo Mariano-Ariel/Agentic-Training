@@ -1,50 +1,198 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
-    <title>Agent UI</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Agent Runtime Interface</title>
+
     <link rel="stylesheet" href="./static/style.css">
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 </head>
+
 <body>
 
 <div class="container">
 
     <h2>Agent Runtime Interface</h2>
 
-    <input id="input" placeholder="Escribe algo..." />
-    <button onclick="send()">Enviar</button>
+    <!-- ========================= -->
+    <!-- DOCUMENT VIEWER -->
+    <!-- ========================= -->
 
-    <pre id="output"></pre>
+    <div class="docs-panel">
+
+        <h3>Knowledge Base</h3>
+
+        <select id="docSelect">
+
+            <option value="agent_tool_flow.md">
+                Agent Tool Flow
+            </option>
+
+            <option value="ai_agents.md">
+                AI Agents
+            </option>
+
+            <option value="embeddings_basics.md">
+                Embeddings Basics
+            </option>
+
+            <option value="prompt_test.md">
+                Prompt Test
+            </option>
+
+        </select>
+
+        <button onclick="loadDoc()">
+            Abrir Documento
+        </button>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- AGENT CHAT -->
+    <!-- ========================= -->
+
+    <div class="chat-panel">
+
+        <h3>Agent Runtime</h3>
+
+        <input
+            id="input"
+            placeholder="Escribe algo..."
+        />
+
+        <button onclick="send()">
+            Enviar
+        </button>
+
+        <pre id="output"></pre>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- MARKDOWN RENDER -->
+    <!-- ========================= -->
+
+    <div id="markdown-content">
+
+        <h3>Document Viewer</h3>
+
+        <p>
+            Selecciona un documento para visualizarlo.
+        </p>
+
+    </div>
 
 </div>
 
 <script>
+
+//
+// =========================
+// AGENT BACKEND
+// =========================
+//
+
 async function send() {
-    const message = document.getElementById("input").value;
+
+    const message =
+        document.getElementById("input").value;
 
     console.log("SENDING:", message);
 
     try {
-        const res = await fetch("http://127.0.0.1:8000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message })
-        });
 
-        console.log("STATUS:", res.status);
+        const res = await fetch(
+            "http://127.0.0.1:8000/chat",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message
+                })
+            }
+        );
 
         const data = await res.json();
-
-        console.log("DATA:", data);
 
         document.getElementById("output").innerText =
             JSON.stringify(data, null, 2);
 
     } catch (err) {
+
         console.error("FETCH ERROR:", err);
+
         document.getElementById("output").innerText =
             "Error en conexión backend";
     }
 }
+
+//
+// =========================
+// MARKDOWN DOCUMENT LOADER
+// =========================
+//
+
+async function loadDoc() {
+
+    const file =
+        document.getElementById("docSelect").value;
+
+    console.log("LOADING DOC:", file);
+
+    try {
+
+        const res =
+            await fetch(`./static/docs/${file}`);
+
+        if (!res.ok) {
+            throw new Error(
+                `HTTP ERROR ${res.status}`
+            );
+        }
+
+        const md =
+            await res.text();
+
+        const html =
+            marked.parse(md);
+
+        document.getElementById(
+            "markdown-content"
+        ).innerHTML = html;
+
+    } catch (err) {
+
+        console.error("DOC ERROR:", err);
+
+        document.getElementById(
+            "markdown-content"
+        ).innerHTML = `
+            <h3>Error</h3>
+            <p>No se pudo cargar el documento.</p>
+        `;
+    }
+}
+
+//
+// =========================
+// AUTO LOAD FIRST DOC
+// =========================
+//
+
+window.onload = () => {
+    loadDoc();
+};
+
 </script>
 
 </body>
